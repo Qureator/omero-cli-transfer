@@ -370,9 +370,6 @@ def create_filepath_annotations(id: str, conn: BlitzGateway,
             anref = AnnotationRef(id=an.id)
             anrefs.append(anref)
         else:
-            # if fpaths:
-            #     f = fpaths[0]
-            # else:
             f = f'pixel_images/{clean_id}.tiff'
 
             uid = (-1) * uuid4().int
@@ -750,10 +747,7 @@ def populate_xml(datatype: str, id: int, filepath: str, conn: BlitzGateway,
         populate_screen(obj, ome, conn, hostname, metadata)
     elif datatype == 'Plate':
         populate_plate(obj, ome, conn, hostname, metadata)
-    # if not barchive:
-    #     with open(filepath, 'w') as fp:
-    #         print(to_xml(ome), file=fp)
-    #         fp.close()
+
     path_id_dict = list_file_ids(ome)
     return ome, path_id_dict
 
