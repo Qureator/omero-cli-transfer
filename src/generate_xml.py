@@ -370,10 +370,7 @@ def create_filepath_annotations(id: str, conn: BlitzGateway,
             anref = AnnotationRef(id=an.id)
             anrefs.append(anref)
         else:
-            if fpaths:
-                f = fpaths[0]
-            else:
-                f = f'pixel_images/{clean_id}.tiff'
+            f = f'pixel_images/{clean_id}.tiff'
 
             uid = (-1) * uuid4().int
             an = CommentAnnotation(id=uid,
@@ -491,15 +488,19 @@ def populate_image(obj: ImageI, ome: OME, conn: BlitzGateway, hostname: str,
         return img_ref
 
     # Create acquisition metadata
-    pix = transfer.pack.image.export_pixels_metadata(obj)
-    imaging_env = transfer.pack.image.export_imaging_environment_metadata(obj.getImagingEnvironment())
-    objective_set = transfer.pack.image.export_objective_settings_metadata(obj.getObjectiveSettings())
+    pix = transfer.pack.export_pixels_metadata(obj)
+    imaging_env = transfer.pack.export_imaging_environment_metadata(obj.getImagingEnvironment())
+    objective_set = transfer.pack.export_objective_settings_metadata(obj.getObjectiveSettings())
+    stage_label = transfer.pack.export_stage_label_metadata(obj.getStageLabel())
 
     # Create instrument if not already in OME
-    instrument_ref = InstrumentRef(id=obj.getInstrument().getId())
+    instrument_ref = InstrumentRef()
 
-    if instrument_ref.id not in [ins.id for ins in ome.instruments]:
-        ome.instruments.append(transfer.pack.instrument.export_instrument_metadata(obj.getInstrument()))
+    if obj.getInstrument() is not None and obj.getInstrument()._obj is not None:
+        instrument_ref.id = obj.getInstrument().getId()
+
+        if instrument_ref.id not in [ins.id for ins in ome.instruments]:
+            ome.instruments.append(transfer.pack.export_instrument_metadata(obj.getInstrument()))
 
     # Create image with acquisition metadata
     img, img_ref = create_image_and_ref(
@@ -510,6 +511,7 @@ def populate_image(obj: ImageI, ome: OME, conn: BlitzGateway, hostname: str,
         imaging_environment=imaging_env,
         objective_settings=objective_set,
         instrument_ref=instrument_ref,
+        stage_label=stage_label
     )
 
     for ann in obj.listAnnotations():
@@ -745,10 +747,7 @@ def populate_xml(datatype: str, id: int, filepath: str, conn: BlitzGateway,
         populate_screen(obj, ome, conn, hostname, metadata)
     elif datatype == 'Plate':
         populate_plate(obj, ome, conn, hostname, metadata)
-    if not barchive:
-        with open(filepath, 'w') as fp:
-            print(to_xml(ome), file=fp)
-            fp.close()
+
     path_id_dict = list_file_ids(ome)
     return ome, path_id_dict
 
