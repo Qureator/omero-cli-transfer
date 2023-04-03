@@ -552,6 +552,12 @@ class TransferControl(GraphControl):
                     for count in range(len(src_v)):
                         map_key = f"Image:{src_v[count]}"
                         imgmap[map_key] = dest_v[count]
+                else:
+                    # if the number of images is different, use the last image file
+                    # as the destination (just in case the source image is the one)
+                    if len(src_v) == 1:
+                        map_key = f"Image:{src_v[0]}"
+                        imgmap[map_key] = sorted(dest_v)[-1]
         return imgmap
 
 
