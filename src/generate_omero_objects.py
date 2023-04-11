@@ -204,6 +204,7 @@ def create_plate_from_images(plate: Plate, img_map: dict, conn: BlitzGateway
                              ) -> int:
     plateobj = PlateI()
     plateobj.name = RStringI(plate.name)
+    plateobj.description = RStringI(plate.description)
     plateobj = conn.getUpdateService().saveAndReturnObject(plateobj)
     plate_id = plateobj.getId().getValue()
     for well in plate.wells:
