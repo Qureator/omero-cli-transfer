@@ -92,7 +92,7 @@ setup(
         'ezomero==1.2.1',
         'ome-types==0.3.3',
         'omero-acquisition-transfer @ '
-        'git+ssh://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.1',
+        'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.1',
     ],
     extras_require={
         "rocrate": ["rocrate==0.7.0"],
