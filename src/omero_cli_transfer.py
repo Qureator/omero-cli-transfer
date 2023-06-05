@@ -291,12 +291,7 @@ class TransferControl(GraphControl):
         file_paths.sort(key=lambda x: Path(x).stem.split("-")[-1])
         dest_paths = move_tiff_files(gateway, src_datatype, src_dataid, file_paths, folder)
         clean_file_paths = [os.sep.join((path.split(os.sep)[-2:])) for path in file_paths]
-
         map_dest_paths = dict(zip(clean_file_paths, dest_paths))
-        print(map_dest_paths)
-        print(map_dest_paths)
-        print(map_dest_paths)
-        print(map_dest_paths)
 
         # Update OME file
         for annot in ome.structured_annotations:
