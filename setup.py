@@ -84,7 +84,7 @@ setup(
     packages=['', 'omero.plugins'],
     package_dir={"": "src"},
     name="omero-cli-transfer",
-    version=os.environ.get('VERSION', '0.0.0'),
+    version='0.5.0',
     maintainer="Erick Ratamero",
     maintainer_email="erick.ratamero@jax.org",
     description=("A set of utilities for exporting a transfer"
@@ -95,8 +95,8 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/TheJacksonLaboratory/omero-cli-transfer",
     install_requires=[
-        'ezomero==1.2.1',
-        'ome-types==0.3.3',
+        'ezomero==2.0.0',
+        'ome-types==0.3.4'
         'omero-acquisition-transfer @ '
         'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.1',
     ],
