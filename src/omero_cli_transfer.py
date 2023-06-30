@@ -180,6 +180,16 @@ class TransferControl(GraphControl):
             nargs="+",
             help="Metadata field to be added to MapAnnotation",
         )
+        pack.add_argument(
+            "--xml_only",
+            help="Pack only the xml file, not the images",
+            action="store_true",
+        )
+        pack.add_argument(
+            "--not_compress",
+            help="Do not compress whole files (ex, tar or zip)",
+            action="store_true",
+        )
         pack.add_argument("filepath", type=str, help=file_help)
 
         file_help = "Path to where the zip file is saved"
@@ -388,9 +398,10 @@ class TransferControl(GraphControl):
             self.metadata,
         )
 
-        print("Starting file copy...")
-        self._copy_files(path_id_dict, folder, self.gateway)
-        self._move_files(src_datatype, [src_dataid.val], ome, folder, self.gateway)
+        if not args.xml_only:
+            print("Starting file copy...")
+            self._copy_files(path_id_dict, folder, self.gateway)
+            self._move_files(src_datatype, [src_dataid.val], ome, folder, self.gateway)
 
         if not args.barchive:
             print(f"Saving metadata at {md_fp}.")
@@ -404,10 +415,10 @@ class TransferControl(GraphControl):
         if args.rocrate:
             print(f"Creating RO-Crate metadata at {md_fp}.")
             populate_rocrate(src_datatype, ome, os.path.splitext(tar_path)[0], path_id_dict, folder)
-        else:
+        elif not args.not_compress:
             self._package_files(os.path.splitext(tar_path)[0], args.zip, folder)
-        print("Cleaning up...")
-        shutil.rmtree(folder)
+            print("Cleaning up...")
+            shutil.rmtree(folder)
         return
 
     def __unpack(self, args):
