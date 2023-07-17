@@ -13,18 +13,20 @@ in that object, plus an XML file detailing the links between entities, annotatio
 The CLI plugin add the subcommand `transfer`, which in its turn has two further subcommands `omero transfer pack` and `omero transfer unpack`. Both subcommands (pack and unpack) will use an existing OMERO session created via CLI or prompt the user for parameters to create one.
 
 # Installation
-tl;dr: if you have `python>=3.7`, a simple `pip install omero-cli-transfer` _might_ do. We recommend conda, though.
+tl;dr: if you have `python>=3.8`, a simple `pip install -e .` _might_ do. We recommend conda, though.
 
-`omero-cli-transfer` requires at least Python 3.7. This is due to `ome-types` requiring that as well;
+`omero-cli-transfer` requires at least Python 3.8. This is due to `ome-types` requiring that as well;
 this package relies heavily on it, and it is not feasible without it. 
 
 Of course, this CAN be an issue, especially given `omero-py` _officially_ only supports Python 3.6. However,
 it is possible to run `omero-py` in Python 3.7 or newer as well. Our recommended way to do so it using `conda`.
 With conda installed, you can do
 ```
-conda create -n myenv -c conda-force python=3.7 zeroc-ice==3.6.5
-conda activate myenv
-pip install omero-cli-transfer
+conda create -n omero-transfer -c conda-forge python=3.8 zeroc-ice==3.6.5
+conda activate omero-transfer
+git clone https://github.com/Qureator/omero-cli-transfer.git
+cd omero-cli-transfer
+pip install -e .
 ```
 It is possible to do the same thing without `conda` as long as your python/pip version is at least 3.7,
 but that will require locally building a wheel for `zeroc-ice` (which pip does automatically) - it is a
@@ -53,12 +55,17 @@ Note that, if you are packing a `Plate` or `Screen`, default OMERO settings prev
 
 `--barchive` creates a package compliant with Bioimage Archive submission standards - see below for more detail.
 
+`--not_compress` does not compress the pack file. This is useful if you are going to use the pack file to import images in-place, as it will save time.
+
+`--xml_only` creates an XML file with the pack contents, but does not create a pack file.
+
 Examples:
 ```
 omero transfer pack Image:123 transfer_pack.tar
 omero transfer pack --zip Image:123 transfer_pack.zip
 omero transfer pack Dataset:1111 /home/user/new_folder/new_pack.tar
 omero transfer pack 999 tarfile.tar  # equivalent to Project:999
+omero transfer pack --not_compress --xml_only Plate:234 plate-234
 ```
 
 ## `omero transfer unpack`
