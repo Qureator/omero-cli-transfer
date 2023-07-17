@@ -96,9 +96,9 @@ setup(
     url="https://github.com/TheJacksonLaboratory/omero-cli-transfer",
     install_requires=[
         'ezomero==2.0.0',
-        'ome-types==0.3.4'
+        'ome-types==0.3.4',
         'omero-acquisition-transfer @ '
-        'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.1',
+        'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.2',
     ],
     extras_require={
         "rocrate": ["rocrate==0.7.0"],
