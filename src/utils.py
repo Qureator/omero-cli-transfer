@@ -11,8 +11,6 @@ from omero.gateway import ImageWrapper
 from omero.util.pixelstypetopython import toNumpy as pixel_type_to_numpy
 from omero_acquisition_transfer.transfer.pack import export_image_metadata
 
-from .ome_tiff import write_ome_tiff
-
 __all__ = ["export_as_ome_tiff", "export_ome_metadata"]
 
 
