@@ -308,9 +308,6 @@ class TransferControl(GraphControl):
                     obj = conn.getObject("Image", clean_id)
                     if obj is not None:
                         if not os.path.exists(filepath):
-                            # e = conn.getSession().createExporter()
-                            # e.addImage(clean_id)
-                            # e.generateTiff(filepath, bigtiff=True)
                             export_as_ome_tiff(obj, filepath)
 
                         self._add_metadata_to_tiff(obj, filepath)
