@@ -38,7 +38,7 @@ from omero.model import Image, Dataset, Project, Plate, Screen
 from omero.grid import ManagedRepositoryPrx as MRepo
 from omero_acquisition_transfer.transfer.pack import merge_metadata_tiff, move_tiff_files, export_image_metadata
 
-from .utils import export_as_ome_tiff
+from utils import export_as_ome_tiff
 
 DIR_PERM = 0o755
 MD5_BUF_SIZE = 65536
