@@ -97,6 +97,9 @@ setup(
     install_requires=[
         'ezomero==2.0.0',
         'ome-types==0.3.4',
+        'xmlschema==2.5.1',
+        'lxml==4.9.4',
+        'pydantic==1.10.13',
         'omero-acquisition-transfer @ '
         'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.2',
     ],
