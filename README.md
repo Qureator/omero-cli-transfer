@@ -39,6 +39,11 @@ pip install omero-cli-transfer[rocrate]
 ```
 instead.
 
+You can also install Java to use this repository.
+```
+conda install openjdk==11.0.15 -c conda-forge
+```
+
 # Usage
 
 ## `omero transfer pack`
