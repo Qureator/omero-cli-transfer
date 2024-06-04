@@ -498,6 +498,8 @@ class TransferControl(GraphControl):
                     zipobj.extractall(str(folder))
             elif Path(filepath).suffix == ".tar":
                 shutil.unpack_archive(filepath, str(folder), "tar")
+            elif Path(filepath).name[-7:] == ".tar.gz":
+                shutil.unpack_archive(filepath, str(folder), "tar.gz")
             else:
                 raise ValueError("File is not a zip or tar file")
         else:
