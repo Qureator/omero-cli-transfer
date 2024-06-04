@@ -22,7 +22,7 @@ Of course, this CAN be an issue, especially given `omero-py` _officially_ only s
 it is possible to run `omero-py` in Python 3.7 or newer as well. Our recommended way to do so it using `conda`.
 With conda installed, you can do
 ```
-conda create -n omero-transfer -c conda-forge python=3.8 zeroc-ice==3.6.5
+conda create -n omero-transfer -c conda-forge python=3.9 zeroc-ice==3.6.5
 conda activate omero-transfer
 git clone https://github.com/Qureator/omero-cli-transfer.git
 cd omero-cli-transfer
