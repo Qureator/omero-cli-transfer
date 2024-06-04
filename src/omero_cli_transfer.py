@@ -343,7 +343,7 @@ class TransferControl(GraphControl):
             print("Creating tar file...")
             # Create a tar archive and delete the original files while adding files one by one
             os.chdir(folder)
-            subprocess.run(f'find . -type f -print0 | tar --remove-files --null -cvf {tar_path} --files-from -', shell=True, check=True)
+            subprocess.run(f'find . -type f -print0 | tar --remove-files --null -cvf ../{tar_path} --files-from -', shell=True, check=True)
             os.chdir("..")
 
     def _process_metadata(self, metadata: Union[List[str], None]):
