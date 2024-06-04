@@ -445,7 +445,7 @@ class TransferControl(GraphControl):
         elif not args.not_compress:
             self._package_files(os.path.splitext(tar_path)[0], args.zip, folder)
             print("Cleaning up...")
-            shutil.rmtree(folder)
+            os.rmdir(folder)
         return
 
     def __unpack(self, args):
