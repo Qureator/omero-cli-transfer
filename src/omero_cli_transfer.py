@@ -17,6 +17,7 @@ import copy
 import glob
 from functools import wraps
 import shutil
+import subprocess
 from typing import DefaultDict
 import hashlib
 from zipfile import ZipFile
@@ -340,7 +341,10 @@ class TransferControl(GraphControl):
             shutil.make_archive(tar_path, "zip", folder)
         else:
             print("Creating tar file...")
-            shutil.make_archive(tar_path, "tar", folder)
+            # Create a tar archive and delete the original files while adding files one by one
+            subprocess.run(['find', folder, '-type', 'f', '-print0', '|', 
+                            'tar', '--remove-files', '--null', '-cvf', tar_path, '--files-from', '-'], 
+                            shell=True)
 
     def _process_metadata(self, metadata: Union[List[str], None]):
         if not metadata:
