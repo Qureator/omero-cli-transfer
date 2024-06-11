@@ -101,7 +101,7 @@ setup(
         'lxml==4.9.4',
         'pydantic==1.10.13',
         'omero-acquisition-transfer @ '
-        'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-0.0.2',
+        'git+https://git@github.com/Qureator/omero-acquisition-transfer.git#egg=omero-acquisition-transfer-1.0.0',
     ],
     extras_require={
         "rocrate": ["rocrate==0.7.0"],
