@@ -290,7 +290,6 @@ class TransferControl(GraphControl):
 
         file_help = "Path to where the zip file is saved"
         unpack.add_argument("filepath", type=str, help=file_help)
-        unpack.add_argument("--ln_s_import", help="Use in-place import", action="store_true")
         unpack.add_argument(
                 "--ln_s_import", help="Use in-place import",
                 action="store_true")
