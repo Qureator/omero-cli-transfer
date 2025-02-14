@@ -35,7 +35,7 @@ setup(
     url="https://github.com/TheJacksonLaboratory/omero-cli-transfer",
     install_requires=[
         'ezomero>=3.0.0, <4.0.0',
-        'ome-types==0.5.1.post1'
+        'ome-types==0.5.1.post1',
         'xmlschema==2.5.1',
         'lxml==4.9.4',
         'pydantic==1.10.13',
