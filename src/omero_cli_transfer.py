@@ -308,9 +308,6 @@ class TransferControl(GraphControl):
                                        "file will be extracted"
         )
         unpack.add_argument(
-            "--output", type=str, help="Output directory where zip " "file will be extracted"
-        )
-        unpack.add_argument(
             "--skip",
             choices=["all", "checksum", "thumbnails", "minmax", "upgrade"],
             help="Skip options to be passed to omero import",
