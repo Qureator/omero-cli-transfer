@@ -606,7 +606,7 @@ class TransferControl(GraphControl):
                 
         if not args.xml_only:
             print("Starting file copy...")
-            self._copy_files(path_id_dict, folder, self.gateway)
+            self._copy_files(path_id_dict, folder, args.ignore_errors, self.gateway)
             self._move_files(src_datatype, [src_dataid.val], ome, folder, self.gateway)
             
         if not args.barchive:
