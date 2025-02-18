@@ -28,7 +28,7 @@ from generate_xml import populate_xml_folder
 from generate_omero_objects import populate_omero, get_server_path
 
 import ezomero
-from ome_types.model import CommentAnnotation, XMLAnnotation, OME
+from ome_types.model import XMLAnnotation, XMLAnnotation, OME
 from ome_types import from_xml, to_xml
 from omero.sys import Parameters
 from omero.rtypes import rstring
@@ -374,6 +374,11 @@ class TransferControl(GraphControl):
                                                         allowed")
                         else:
                             cli.invoke(['export', '--file', filepath, id])
+                        
+                        obj = conn.getObject("Image", clean_id)
+                        if obj is not None:
+                            self._add_metadata_to_tiff(obj, filepath)
+                            
                         downloaded_ids.append(id)
                     else:
                         if not ignore_errors:
@@ -417,12 +422,23 @@ class TransferControl(GraphControl):
         dest_paths = move_tiff_files(gateway, src_datatype, src_dataids, path_id_dict, folder)
 
         # Update OME file
-        for annot in ome.structured_annotations:
-            if isinstance(annot, CommentAnnotation):
-                if annot.value in dest_paths:
-                    annot.value = dest_paths[annot.value][1]
-                    print("Updated path: " + annot.value)
-
+        ome_dict = ETree.fromstring(to_xml(ome, canonicalize=True))
+        
+        for annot in ome_dict.findall(".//OME/StructuredAnnotations/OME/StructuredAnnotations/OME/StructuredAnnotation"):
+            if isinstance(annot, XMLAnnotation):
+                tree = ETree.fromstring(to_xml(annot.value, canonicalize=True))
+                for el in tree:
+                    if el.tag.rpartition('}')[2] == "CLITransferServerPath":
+                        for path in el:
+                            print(path.text, path)
+                            if path.text in dest_paths:
+                                path.text = dest_paths[path.text]
+                            else:
+                                raise ValueError(f"Path {path.text} not found in path_id_dict")
+        
+        ome = from_xml(ETree.tostring(ome_dict))
+        return ome
+        
     def _add_metadata_to_tiff(self, obj: ImageWrapper, filepath: str):
         merge_metadata_tiff(obj, filepath)
 
@@ -491,6 +507,11 @@ class TransferControl(GraphControl):
         ome.projects.extend(newome.projects)
         ome.structured_annotations.extend(newome.structured_annotations)
         ome.rois.extend(newome.rois)
+        
+        for instrument in newome.instruments:
+            if instrument not in ome.instruments:
+                ome.instruments.append(instrument)
+        
         return ome
 
     def __pack(self, args):
@@ -556,15 +577,16 @@ class TransferControl(GraphControl):
             ome = self.__append_to_ome(ome, this_ome)
             path_id_dict.update(this_id_dict)
             # need to somehow merge omes/path_id_dicts
-        if not args.barchive:
-            with open(md_fp, 'w') as fp:
-                print(to_xml(ome), file=fp)
-                fp.close()
         if args.binaries == "all":
             print("Starting file copy...")
             self._copy_files(path_id_dict, folder, args.ignore_errors,
                              self.gateway)
-            self._move_files(path_id_dict, src_datatype, src_dataids, ome, folder, self.gateway)
+            ome = self._move_files(path_id_dict, src_datatype, src_dataids, ome, folder, self.gateway)
+        
+        if not args.barchive:
+            with open(md_fp, 'w') as fp:
+                print(to_xml(ome), file=fp)
+                fp.close()
 
         if args.simple:
             self._fix_pixels_image_simple(ome, folder, md_fp)
@@ -798,6 +820,10 @@ class TransferControl(GraphControl):
                                       for x in src_dict.keys()})
         dest_dict = DefaultDict(list, {x: sorted(dest_dict[x])
                                        for x in dest_dict.keys()})
+        
+        print(src_dict)
+        print(dest_dict)
+        
         for src_k in src_dict.keys():
             src_v = src_dict[src_k]
             if src_k in dest_dict.keys():
