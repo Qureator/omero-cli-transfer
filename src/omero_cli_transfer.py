@@ -17,7 +17,6 @@ import copy
 import glob
 from functools import wraps
 import shutil
-import subprocess
 from typing import DefaultDict
 import hashlib
 from zipfile import ZipFile
@@ -45,13 +44,13 @@ DIR_PERM = 0o755
 MD5_BUF_SIZE = 65536
 
 
-HELP = """Transfer objects and annotations between servers.
+HELP = ("""Transfer objects and annotations between servers.
 
 Both subcommands (pack and unpack) will use an existing OMERO session
 created via CLI or prompt the user for parameters to create one.
-"""
+""")
 
-PACK_HELP = """Creates transfer packet for moving objects.
+PACK_HELP = ("""Creates transfer packet for moving objects.
 
 This subcommand creates a transfer packet for moving objects between
 OMERO server instances.
@@ -105,9 +104,9 @@ omero transfer pack 999 tarfile.tar  # equivalent to Project:999
 omero transfer pack 1 transfer_pack.tar --metadata img_id version db_id
 omero transfer pack --binaries none Dataset:1111 /home/user/new_folder/
 omero transfer pack --binaries all Dataset:1111 /home/user/new_folder/pack.tar
-"""
+""")
 
-UNPACK_HELP = """Unpacks a transfer packet into an OMERO hierarchy.
+UNPACK_HELP = ("""Unpacks a transfer packet into an OMERO hierarchy.
 
 Unpacks an existing transfer packet, imports images
 as orphans and uses the XML contained in the transfer packet to re-create
@@ -146,7 +145,7 @@ omero transfer unpack transfer_pack.zip
 omero transfer unpack --output /home/user/optional_folder --ln_s
 omero transfer unpack --folder /home/user/unpacked_folder/ --skip upgrade
 omero transfer unpack pack.tar --metadata db_id orig_user hostname
-"""
+""")
 
 PREPARE_HELP = ("""Creates an XML from a folder with images.
 
@@ -179,14 +178,13 @@ def gateway_required(func: Callable) -> Callable:
     a BlitzGateway (self.gateway), and makes sure that
     all services of the Blitzgateway are closed again.
     """
-
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
         self.client = self.ctx.conn(*args)
         self.session = self.client.getSessionId()
         self.gateway = BlitzGateway(client_obj=self.client)
         router = self.client.getRouter(self.client.getCommunicator())
-        self.hostname = str(router).split("-h ")[-1].split()[0]
+        self.hostname = str(router).split('-h ')[-1].split()[0]
         try:
             return func(self, *args, **kwargs)
         finally:
@@ -194,7 +192,6 @@ def gateway_required(func: Callable) -> Callable:
                 self.gateway.close(hard=False)
                 self.gateway = None
                 self.client = None
-
     return _wrapper
 
 
@@ -225,8 +222,8 @@ class TransferControl(GraphControl):
                           help=obj_help)
         file_help = ("Path to where the packed file will be saved")
         pack.add_argument(
-            "--zip", help="Pack into a zip file rather than a tarball", action="store_true"
-        )
+                "--zip", help="Pack into a zip file rather than a tarball",
+                action="store_true")
         pack.add_argument(
                 "--figure", help="Include OMERO.Figures into the pack"
                                  " (caveats apply)",
@@ -236,10 +233,9 @@ class TransferControl(GraphControl):
                                    " Archive submission standards",
                 action="store_true")
         pack.add_argument(
-            "--rocrate",
-            help="Pack into a file compliant with " "RO-Crate standards",
-            action="store_true",
-        )
+                "--rocrate", help="Pack into a file compliant with "
+                                  "RO-Crate standards",
+                action="store_true")
         pack.add_argument(
                 "--simple", help="Pack into a human-readable package file",
                 action="store_true")
@@ -249,31 +245,15 @@ class TransferControl(GraphControl):
                 action="store_true")
         pack.add_argument(
             "--metadata",
-            choices=[
-                "all",
-                "none",
-                "img_id",
-                "timestamp",
-                "software",
-                "version",
-                "md5",
-                "hostname",
-                "db_id",
-                "orig_user",
-                "orig_group",
-            ],
-            nargs="+",
-            help="Metadata field to be added to MapAnnotation",
-        )
-        pack.add_argument(
-            "--xml_only",
-            help="Pack only the xml file, not the images",
-            action="store_true",
+            choices=['all', 'none', 'img_id', 'timestamp',
+                     'software', 'version', 'md5', 'hostname', 'db_id',
+                     'orig_user', 'orig_group'], nargs='+',
+            help="Metadata field to be added to MapAnnotation"
         )
         pack.add_argument(
             "--not_compress",
             help="Do not compress whole files (ex, tar or zip)",
-            action="store_true",
+            action="store_true"
         )
         pack.add_argument(
                 "--plugin", help="Use external plugin for packing.",
@@ -288,7 +268,7 @@ class TransferControl(GraphControl):
                  "With `--binaries all` (the default), both pixel data "
                  "and annotation are saved.")
 
-        file_help = "Path to where the zip file is saved"
+        file_help = ("Path to where the zip file is saved")
         unpack.add_argument("filepath", type=str, help=file_help)
         unpack.add_argument(
                 "--ln_s_import", help="Use in-place import",
@@ -308,28 +288,16 @@ class TransferControl(GraphControl):
                                        "file will be extracted"
         )
         unpack.add_argument(
-            "--skip",
-            choices=["all", "checksum", "thumbnails", "minmax", "upgrade"],
-            help="Skip options to be passed to omero import",
+            "--skip", choices=['all', 'checksum', 'thumbnails', 'minmax',
+                               'upgrade'],
+            help="Skip options to be passed to omero import"
         )
         unpack.add_argument(
             "--metadata",
-            choices=[
-                "all",
-                "none",
-                "img_id",
-                "plate_id",
-                "timestamp",
-                "software",
-                "version",
-                "md5",
-                "hostname",
-                "db_id",
-                "orig_user",
-                "orig_group",
-            ],
-            nargs="+",
-            help="Metadata field to be added to MapAnnotation",
+            choices=['all', 'none', 'img_id', 'plate_id', 'timestamp',
+                     'software', 'version', 'md5', 'hostname', 'db_id',
+                     'orig_user', 'orig_group'], nargs='+',
+            help="Metadata field to be added to MapAnnotation"
         )
         folder_help = ("Path to folder with image files")
         prepare.add_argument("folder", type=str, help=folder_help)
@@ -339,7 +307,7 @@ class TransferControl(GraphControl):
 
     @gateway_required
     def pack(self, args):
-        """Implements the 'pack' command"""
+        """ Implements the 'pack' command """
         self.__pack(args)
 
     @gateway_required
@@ -442,19 +410,17 @@ class TransferControl(GraphControl):
                 else:
                     cli.invoke(['download', id, subfolder])
 
-    def _move_files(self, src_datatype, src_dataid, ome: OME, folder: str, gateway: BlitzGateway):
+    def _move_files(self, path_id_dict: Dict, src_datatype, src_dataids, ome: OME, folder: str, gateway: BlitzGateway):
         # Get file paths from target folder
-        file_paths = glob.glob(os.path.join(folder, "pixel_images", "*.tiff"), recursive=True)
-        file_paths.sort(key=lambda x: Path(x).stem.split("-")[-1])
-        dest_paths = move_tiff_files(gateway, src_datatype, src_dataid, file_paths, folder)
-        clean_file_paths = [os.sep.join((path.split(os.sep)[-2:])) for path in file_paths]
-        map_dest_paths = dict(zip(clean_file_paths, dest_paths))
+        # file_paths = glob.glob(os.path.join(folder, "pixel_images", "*.tiff"), recursive=True)
+        # file_paths.sort(key=lambda x: Path(x).stem.split("-")[-1])
+        dest_paths = move_tiff_files(gateway, src_datatype, src_dataids, path_id_dict, folder)
 
         # Update OME file
         for annot in ome.structured_annotations:
             if isinstance(annot, CommentAnnotation):
-                if annot.value in map_dest_paths:
-                    annot.value = map_dest_paths[annot.value]
+                if annot.value in dest_paths:
+                    annot.value = dest_paths[annot.value][1]
                     print("Updated path: " + annot.value)
 
     def _add_metadata_to_tiff(self, obj: ImageWrapper, filepath: str):
@@ -463,32 +429,19 @@ class TransferControl(GraphControl):
     def _package_files(self, tar_path: str, zip: bool, folder: str):
         if zip:
             print("Creating zip file...")
-            shutil.make_archive(tar_path, "zip", folder)
+            shutil.make_archive(tar_path, 'zip', folder)
         else:
             print("Creating tar file...")
-            # Create a tar archive and delete the original files while adding files one by one
-            os.chdir(folder)
-            subprocess.run(f'find . -type f -print0 | tar --remove-files --null -cvf ../{tar_path}.tar --files-from -', shell=True, check=True)
-            os.chdir("..")
+            shutil.make_archive(tar_path, 'tar', folder)
 
     def _process_metadata(self, metadata: Union[List[str], None]):
         if not metadata:
-            metadata = ["all"]
+            metadata = ['all']
         if "all" in metadata:
             metadata.remove("all")
-            metadata.extend(
-                [
-                    "img_id",
-                    "plate_id",
-                    "timestamp",
-                    "software",
-                    "version",
-                    "hostname",
-                    "md5",
-                    "orig_user",
-                    "orig_group",
-                ]
-            )
+            metadata.extend(["img_id", "plate_id", "timestamp", "software",
+                             "version", "hostname", "md5", "orig_user",
+                             "orig_group"])
         if "none" in metadata:
             metadata = None
         if metadata:
@@ -603,27 +556,22 @@ class TransferControl(GraphControl):
             ome = self.__append_to_ome(ome, this_ome)
             path_id_dict.update(this_id_dict)
             # need to somehow merge omes/path_id_dicts
-                
-        if not args.xml_only:
-            print("Starting file copy...")
-            self._copy_files(path_id_dict, folder, args.ignore_errors, self.gateway)
-            self._move_files(src_datatype, [src_dataid.val], ome, folder, self.gateway)
-            
         if not args.barchive:
             with open(md_fp, 'w') as fp:
                 print(to_xml(ome), file=fp)
                 fp.close()
-                
         if args.binaries == "all":
             print("Starting file copy...")
             self._copy_files(path_id_dict, folder, args.ignore_errors,
                              self.gateway)
+            self._move_files(path_id_dict, src_datatype, src_dataids, ome, folder, self.gateway)
 
         if args.simple:
             self._fix_pixels_image_simple(ome, folder, md_fp)
         if args.barchive:
             print(f"Creating Bioimage Archive TSV at {md_fp}.")
-            populate_tsv(src_datatype, ome, md_fp, path_id_dict, folder)
+            populate_tsv(src_datatype, ome, md_fp,
+                         path_id_dict, folder)
         if args.rocrate:
             print(f"Creating RO-Crate metadata at {md_fp}.")
             populate_rocrate(src_datatype, ome, os.path.splitext(tar_path)[0],
@@ -671,7 +619,8 @@ class TransferControl(GraphControl):
         self._process_metadata(args.metadata)
         if not args.folder:
             print(f"Unzipping {args.filepath}...")
-            hash, ome, folder = self._load_from_pack(args.filepath, args.output)
+            hash, ome, folder = self._load_from_pack(args.filepath,
+                                                     args.output)
         else:
             folder = Path(args.filepath)
             ome = from_xml(folder / "transfer.xml")
@@ -683,7 +632,8 @@ class TransferControl(GraphControl):
             ln_s = True
         else:
             ln_s = False
-        dest_img_map = self._import_files(folder, filelist, ln_s, args.skip, self.gateway)
+        dest_img_map = self._import_files(folder, filelist,
+                                          ln_s, args.skip, self.gateway)
         self._delete_all_rois(dest_img_map, self.gateway)
         print("Matching source and destination images...")
         img_map = self._make_image_map(src_img_map, dest_img_map, self.gateway)
@@ -692,7 +642,8 @@ class TransferControl(GraphControl):
                        hash, folder, self.metadata, args.merge, args.figure)
         return
 
-    def _load_from_pack(self, filepath: str, output: Optional[str] = None) -> Tuple[str, OME, Path]:
+    def _load_from_pack(self, filepath: str, output: Optional[str] = None
+                        ) -> Tuple[str, OME, Path]:
         if (not filepath) or (not isinstance(filepath, str)):
             raise TypeError("filepath must be a string")
         if output and not isinstance(output, str):
@@ -704,7 +655,7 @@ class TransferControl(GraphControl):
         else:
             folder = parent_folder / filename
         if Path(filepath).exists():
-            with open(filepath, "rb") as file:
+            with open(filepath, 'rb') as file:
                 md5 = hashlib.md5()
                 while True:
                     data = file.read(MD5_BUF_SIZE)
@@ -712,8 +663,8 @@ class TransferControl(GraphControl):
                         break
                     md5.update(data)
                 hash = md5.hexdigest()
-            if Path(filepath).suffix == ".zip":
-                with ZipFile(filepath, "r") as zipobj:
+            if Path(filepath).suffix == '.zip':
+                with ZipFile(filepath, 'r') as zipobj:
                     zipobj.extractall(str(folder))
             elif Path(filepath).suffix == ".tar":
                 shutil.unpack_archive(filepath, str(folder), "tar")
@@ -761,20 +712,19 @@ class TransferControl(GraphControl):
         img_map = DefaultDict(list, {x: sorted(img_map[x]) for x in img_map.keys()})
         return newome, img_map, filelist
 
-    def _import_files(
-        self, folder: Path, filelist: List[str], ln_s: bool, skip: str, gateway: BlitzGateway
-    ) -> dict:
+    def _import_files(self, folder: Path, filelist: List[str], ln_s: bool,
+                      skip: str, gateway: BlitzGateway) -> dict:
         cli = CLI()
         cli.loadplugins()
         dest_map = {}
-        curr_folder = str(Path(".").resolve())
+        curr_folder = str(Path('.').resolve())
         for filepath in filelist:
-            dest_path = str(os.path.join(curr_folder, folder, ".", filepath))
-            command = ["import", dest_path]
+            dest_path = str(os.path.join(curr_folder, folder,  '.', filepath))
+            command = ['import', dest_path]
             if ln_s:
-                command.append("--transfer=ln_s")
+                command.append('--transfer=ln_s')
             if skip:
-                command.extend(["--skip", skip])
+                command.extend(['--skip', skip])
             cli.invoke(command)
             img_ids = self._get_image_ids(dest_path, gateway)
             dest_map[dest_path] = img_ids
@@ -801,16 +751,16 @@ class TransferControl(GraphControl):
         """
         q = conn.getQueryService()
         params = Parameters()
-        path_query = str(file_path).strip("/")
-        params.map = {"cpath": rstring("%s%%" % path_query)}
+        path_query = str(file_path).strip('/')
+        params.map = {"cpath": rstring('%s%%' % path_query)}
         results = q.projection(
             "SELECT i.id FROM Image i"
             " JOIN i.fileset fs"
             " JOIN fs.usedFiles u"
             " WHERE u.clientPath LIKE :cpath",
             params,
-            conn.SERVICE_OPTS,
-        )
+            conn.SERVICE_OPTS
+            )
         all_image_ids = list(set(sorted([r[0].val for r in results])))
         image_ids = []
         for img_id in all_image_ids:
@@ -821,7 +771,8 @@ class TransferControl(GraphControl):
                 is_annotated = False
                 for ann in anns:
                     ann_content = conn.getObject("MapAnnotation", ann)
-                    if ann_content.getNs() == "openmicroscopy.org/cli/transfer":
+                    if ann_content.getNs() == \
+                            'openmicroscopy.org/cli/transfer':
                         is_annotated = True
                 if not is_annotated:
                     image_ids.append(img_id)
@@ -843,8 +794,10 @@ class TransferControl(GraphControl):
         for k, v in dest_map.items():
             newkey = k.split("/./")[-1]
             dest_dict[newkey].extend(v)
-        src_dict = DefaultDict(list, {x: sorted(src_dict[x]) for x in src_dict.keys()})
-        dest_dict = DefaultDict(list, {x: sorted(dest_dict[x]) for x in dest_dict.keys()})
+        src_dict = DefaultDict(list, {x: sorted(src_dict[x])
+                                      for x in src_dict.keys()})
+        dest_dict = DefaultDict(list, {x: sorted(dest_dict[x])
+                                       for x in dest_dict.keys()})
         for src_k in src_dict.keys():
             src_v = src_dict[src_k]
             if src_k in dest_dict.keys():
