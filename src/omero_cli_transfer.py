@@ -422,19 +422,17 @@ class TransferControl(GraphControl):
         dest_paths = move_tiff_files(gateway, src_datatype, src_dataids, path_id_dict, folder)
 
         # Update OME file
-        ome_dict = ETree.fromstring(to_xml(ome, canonicalize=True))
+        ome_dict = ETree.fromstring(to_xml(ome))
         
-        for annot in ome_dict.findall(".//OME/StructuredAnnotations/OME/StructuredAnnotations/OME/StructuredAnnotation"):
-            if isinstance(annot, XMLAnnotation):
-                tree = ETree.fromstring(to_xml(annot.value, canonicalize=True))
-                for el in tree:
-                    if el.tag.rpartition('}')[2] == "CLITransferServerPath":
-                        for path in el:
-                            print(path.text, path)
-                            if path.text in dest_paths:
-                                path.text = dest_paths[path.text]
-                            else:
-                                raise ValueError(f"Path {path.text} not found in path_id_dict")
+        for annot in ome_dict.find('{http://www.openmicroscopy.org/Schemas/OME/2016-06}StructuredAnnotations') \
+                            .findall('{http://www.openmicroscopy.org/Schemas/OME/2016-06}XMLAnnotation'):
+            for value in annot.findall('{http://www.openmicroscopy.org/Schemas/OME/2016-06}Value'):
+                for el in value.findall('{http://www.openmicroscopy.org/Schemas/OME/2016-06}CLITransferServerPath'):
+                    for path in el:
+                        if path.text in dest_paths:
+                            path.text = dest_paths[path.text]
+                        else:
+                            raise ValueError(f"Path {path.text} not found in path_id_dict")
         
         ome = from_xml(ETree.tostring(ome_dict))
         return ome
@@ -820,10 +818,6 @@ class TransferControl(GraphControl):
                                       for x in src_dict.keys()})
         dest_dict = DefaultDict(list, {x: sorted(dest_dict[x])
                                        for x in dest_dict.keys()})
-        
-        print(src_dict)
-        print(dest_dict)
-        
         for src_k in src_dict.keys():
             src_v = src_dict[src_k]
             if src_k in dest_dict.keys():
