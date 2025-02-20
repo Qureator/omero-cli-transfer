@@ -65,7 +65,7 @@ jobs:
 
       - name: Build and run standard tests
         run: |
-          POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
+          conda run -n omero-transfer POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
 
       - name: Build and run no-plate tests
         run: |
