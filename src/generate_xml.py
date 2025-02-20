@@ -750,18 +750,27 @@ def populate_image(obj: ImageI, ome: OME, conn: BlitzGateway, hostname: str,
 
     # Create acquisition metadata
     pix = transfer.pack.export_pixels_metadata(obj)
-    imaging_env = transfer.pack.export_imaging_environment_metadata(obj.getImagingEnvironment())
-    objective_set = transfer.pack.export_objective_settings_metadata(obj.getObjectiveSettings())
-    stage_label = transfer.pack.export_stage_label_metadata(obj.getStageLabel())
+    imaging_env = transfer.pack.export_imaging_environment_metadata(
+        obj.getImagingEnvironment()
+    )
+    objective_set = transfer.pack.export_objective_settings_metadata(
+        obj.getObjectiveSettings()
+    )
+    stage_label = transfer.pack.export_stage_label_metadata(
+        obj.getStageLabel()
+    )
 
     # Create instrument if not already in OME
     instrument_ref = InstrumentRef()
 
-    if obj.getInstrument() is not None and obj.getInstrument()._obj is not None:
+    if (obj.getInstrument() is not None and
+       obj.getInstrument()._obj is not None):
         instrument_ref.id = obj.getInstrument().getId()
 
         if instrument_ref.id not in [ins.id for ins in ome.instruments]:
-            ome.instruments.append(transfer.pack.export_instrument_metadata(obj.getInstrument()))
+            ome.instruments.append(
+                transfer.pack.export_instrument_metadata(obj.getInstrument())
+            )
 
     # Create image with acquisition metadata
     img, img_ref = create_image_and_ref(

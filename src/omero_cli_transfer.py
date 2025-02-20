@@ -14,7 +14,6 @@ from pathlib import Path
 import sys
 import os
 import copy
-import glob
 from functools import wraps
 import shutil
 from typing import DefaultDict
@@ -28,16 +27,17 @@ from generate_xml import populate_xml_folder
 from generate_omero_objects import populate_omero, get_server_path
 
 import ezomero
-from ome_types.model import XMLAnnotation, XMLAnnotation, OME
+from ome_types.model import XMLAnnotation, OME
 from ome_types import from_xml, to_xml
 from omero.sys import Parameters
 from omero.rtypes import rstring
 from omero.cli import CLI, GraphControl, GraphArg
 from omero.cli import NonZeroReturnCode
 from omero.gateway import BlitzGateway, ImageWrapper
-from omero.model import Image, Dataset, Project, Plate, Screen
 from omero.grid import ManagedRepositoryPrx as MRepo
-from omero_acquisition_transfer.transfer.pack import merge_metadata_tiff, move_tiff_files
+from omero_acquisition_transfer.transfer.pack import (
+    merge_metadata_tiff, move_tiff_files
+)
 
 
 DIR_PERM = 0o755
@@ -374,11 +374,11 @@ class TransferControl(GraphControl):
                                                         allowed")
                         else:
                             cli.invoke(['export', '--file', filepath, id])
-                        
+
                         obj = conn.getObject("Image", clean_id)
                         if obj is not None:
                             self._add_metadata_to_tiff(obj, filepath)
-                            
+
                         downloaded_ids.append(id)
                     else:
                         if not ignore_errors:
@@ -415,28 +415,39 @@ class TransferControl(GraphControl):
                 else:
                     cli.invoke(['download', id, subfolder])
 
-    def _move_files(self, path_id_dict: Dict, src_datatype, src_dataids, ome: OME, folder: str, gateway: BlitzGateway):
+    def _move_files(
+        self,
+        path_id_dict: Dict,
+        src_datatype,
+        src_dataids,
+        ome: OME,
+        folder: str,
+        gateway: BlitzGateway
+    ):
         # Get file paths from target folder
-        # file_paths = glob.glob(os.path.join(folder, "pixel_images", "*.tiff"), recursive=True)
-        # file_paths.sort(key=lambda x: Path(x).stem.split("-")[-1])
-        dest_paths = move_tiff_files(gateway, src_datatype, src_dataids, path_id_dict, folder)
+        dest_paths = move_tiff_files(
+            gateway, src_datatype, src_dataids, path_id_dict, folder
+        )
 
         # Update OME file
         ome_dict = ETree.fromstring(to_xml(ome))
-        
-        for annot in ome_dict.find('{http://www.openmicroscopy.org/Schemas/OME/2016-06}StructuredAnnotations') \
-                            .findall('{http://www.openmicroscopy.org/Schemas/OME/2016-06}XMLAnnotation'):
-            for value in annot.findall('{http://www.openmicroscopy.org/Schemas/OME/2016-06}Value'):
-                for el in value.findall('{http://www.openmicroscopy.org/Schemas/OME/2016-06}CLITransferServerPath'):
+        OME_VERSION = '{http://www.openmicroscopy.org/Schemas/OME/2016-06}'
+
+        for annot in ome_dict.find(f'{OME_VERSION}StructuredAnnotations') \
+                             .findall(f'{OME_VERSION}XMLAnnotation'):
+            for value in annot.findall(f'{OME_VERSION}Value'):
+                for el in value.findall(f'{OME_VERSION}CLITransferServerPath'):
                     for path in el:
                         if path.text in dest_paths:
                             path.text = dest_paths[path.text]
                         else:
-                            raise ValueError(f"Path {path.text} not found in path_id_dict")
-        
+                            raise ValueError(
+                                f"Path {path.text} not found in path_id_dict"
+                            )
+
         ome = from_xml(ETree.tostring(ome_dict))
         return ome
-        
+
     def _add_metadata_to_tiff(self, obj: ImageWrapper, filepath: str):
         merge_metadata_tiff(obj, filepath)
 
@@ -505,11 +516,11 @@ class TransferControl(GraphControl):
         ome.projects.extend(newome.projects)
         ome.structured_annotations.extend(newome.structured_annotations)
         ome.rois.extend(newome.rois)
-        
+
         for instrument in newome.instruments:
             if instrument not in ome.instruments:
                 ome.instruments.append(instrument)
-        
+
         return ome
 
     def __pack(self, args):
@@ -571,7 +582,7 @@ class TransferControl(GraphControl):
                                                   args.barchive, args.simple,
                                                   args.figure,
                                                   self.metadata)
-            
+
             ome = self.__append_to_ome(ome, this_ome)
             path_id_dict.update(this_id_dict)
             # need to somehow merge omes/path_id_dicts
@@ -579,8 +590,15 @@ class TransferControl(GraphControl):
             print("Starting file copy...")
             self._copy_files(path_id_dict, folder, args.ignore_errors,
                              self.gateway)
-            ome = self._move_files(path_id_dict, src_datatype, src_dataids, ome, folder, self.gateway)
-        
+            ome = self._move_files(
+                path_id_dict,
+                src_datatype,
+                src_dataids,
+                ome,
+                folder,
+                self.gateway
+            )
+
         if not args.barchive:
             with open(md_fp, 'w') as fp:
                 print(to_xml(ome), file=fp)
@@ -597,7 +615,9 @@ class TransferControl(GraphControl):
             populate_rocrate(src_datatype, ome, os.path.splitext(tar_path)[0],
                              path_id_dict, folder)
         if not args.not_compress:
-            self._package_files(os.path.splitext(tar_path)[0], args.zip, folder)
+            self._package_files(
+                os.path.splitext(tar_path)[0], args.zip, folder
+            )
         if args.plugin:
             """
             Plugins for omero-cli-transfer can be created by providing
@@ -729,7 +749,8 @@ class TransferControl(GraphControl):
                 if ref.id in map_ref_ids:
                     i.annotation_refs.remove(ref)
         filelist = list(set(filelist))
-        img_map = DefaultDict(list, {x: sorted(img_map[x]) for x in img_map.keys()})
+        img_map = DefaultDict(list,
+                              {x: sorted(img_map[x]) for x in img_map.keys()})
         return newome, img_map, filelist
 
     def _import_files(self, folder: Path, filelist: List[str], ln_s: bool,
@@ -841,8 +862,9 @@ class TransferControl(GraphControl):
                         map_key = f"Image:{src_v[count]}"
                         imgmap[map_key] = clean_dest[count]
                 else:
-                    # if the number of images is different, use the last image file
-                    # as the destination (just in case the source image is the one)
+                    # if the number of images is different, use the last
+                    # image file as the destination (just in case the
+                    # source image is the one)
                     if len(src_v) == 1:
                         map_key = f"Image:{src_v[0]}"
                         imgmap[map_key] = sorted(dest_v)[-1]

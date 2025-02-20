@@ -27,6 +27,8 @@ import os
 import copy
 import re
 
+from omero_acquisition_transfer import transfer
+
 
 def create_or_set_projects(pjs: List[Project], conn: BlitzGateway,
                            merge: bool) -> dict:
@@ -40,8 +42,6 @@ def create_or_set_projects(pjs: List[Project], conn: BlitzGateway,
                 pj_id = ezomero.post_project(conn, pj.name, pj.description)
             pj_map[pj.id] = pj_id
     return pj_map
-
-from omero_acquisition_transfer import transfer
 
 
 def create_projects(pjs: List[Project], conn: BlitzGateway) -> dict:
@@ -673,7 +673,9 @@ def attach_acquisition_metadata(ome: OME, img_map: dict, conn: BlitzGateway):
         try:
             img_id = img_map[img.id]
             img_obj = conn.getObject("Image", img_id)
-            transfer.attach_image_metadata(img, img_obj, omero_id_to_object, conn)
+            transfer.attach_image_metadata(
+                img, img_obj, omero_id_to_object, conn
+            )
         except KeyError:
             print(f"Image corresponding to {img.id} not found. Skipping.")
 
