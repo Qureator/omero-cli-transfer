@@ -38,7 +38,6 @@ jobs:
           python-version: "3.9"
           channels: conda-forge
           activate-environment: omero-transfer
-          environment-file: environment.yml  # (선택) 환경 파일을 사용하면 편리함
 
       - name: Create and activate Conda environment
         run: |
