@@ -679,6 +679,7 @@ def attach_acquisition_metadata(ome: OME, img_map: dict, conn: BlitzGateway):
         except KeyError:
             print(f"Image corresponding to {img.id} not found. Skipping.")
 
+
 def rename_plates(pls: List[Plate], pl_map: dict, conn: BlitzGateway):
     for pl in pls:
         try:
