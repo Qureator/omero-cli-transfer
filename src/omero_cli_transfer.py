@@ -431,12 +431,12 @@ class TransferControl(GraphControl):
 
         # Update OME file
         ome_dict = ETree.fromstring(to_xml(ome))
-        OME_VERSION = '{http://www.openmicroscopy.org/Schemas/OME/2016-06}'
+        ome_version = '{http://www.openmicroscopy.org/Schemas/OME/2016-06}'
 
-        for annot in ome_dict.find(f'{OME_VERSION}StructuredAnnotations') \
-                             .findall(f'{OME_VERSION}XMLAnnotation'):
-            for value in annot.findall(f'{OME_VERSION}Value'):
-                for el in value.findall(f'{OME_VERSION}CLITransferServerPath'):
+        for annot in ome_dict.find(f'{ome_version}StructuredAnnotations') \
+                             .findall(f'{ome_version}XMLAnnotation'):
+            for value in annot.findall(f'{ome_version}Value'):
+                for el in value.findall(f'{ome_version}CLITransferServerPath'):
                     for path in el:
                         if path.text in dest_paths:
                             path.text = dest_paths[path.text]
