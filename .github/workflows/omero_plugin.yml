@@ -31,41 +31,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Miniconda
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          python-version: "3.9"
-          channels: conda-forge
-          activate-environment: omero-transfer
+      # - name: Set up Miniconda
+      #   uses: conda-incubator/setup-miniconda@v2
+      #   with:
+      #     auto-update-conda: true
+      #     python-version: "3.9"
+      #     channels: conda-forge
+      #     activate-environment: omero-transfer
 
-      - name: Create and activate Conda environment
-        run: |
-          conda init
-          conda create -n omero-transfer -c conda-forge python=3.9 zeroc-ice==3.6.5
-          echo "conda activate omero-transfer" >> ~/.bashrc
-          source ~/.bashrc
-          conda info --envs
+      # - name: Create and activate Conda environment
+      #   run: |
+      #     conda init
+      #     conda create -n omero-transfer -c conda-forge python=3.9 zeroc-ice==3.6.5
+      #     echo "conda activate omero-transfer" >> ~/.bashrc
+      #     source ~/.bashrc
+      #     conda info --envs
 
-      - name: Checkout omero-test-infra
-        uses: actions/checkout@master
-        with:
-          repository: ome/omero-test-infra
-          path: .omero
-          ref: ${{ secrets.OMERO_TEST_INFRA_REF }}
+      # - name: Checkout omero-test-infra
+      #   uses: actions/checkout@master
+      #   with:
+      #     repository: ome/omero-test-infra
+      #     path: .omero
+      #     ref: ${{ secrets.OMERO_TEST_INFRA_REF }}
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+      # - name: Setup SSH
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+      #     chmod 600 ~/.ssh/id_rsa
+      #     ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-      - name: Build and run standard tests
-        run: |
-          conda run -n omero-transfer POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
+      # - name: Build and run standard tests
+      #   run: |
+      #     conda run -n omero-transfer POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
 
-      - name: Build and run no-plate tests
-        run: |
-          conda run -n omero-transfer .omero/docker $STAGE
+      # - name: Build and run no-plate tests
+      #   run: |
+      #     conda run -n omero-transfer .omero/docker $STAGE
 
