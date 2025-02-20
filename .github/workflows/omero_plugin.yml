@@ -41,6 +41,7 @@ jobs:
 
       - name: Create and activate Conda environment
         run: |
+          conda init
           conda create -n omero-transfer -c conda-forge python=3.9 zeroc-ice==3.6.5
           echo "conda activate omero-transfer" >> ~/.bashrc
           source ~/.bashrc
