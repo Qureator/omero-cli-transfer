@@ -54,21 +54,12 @@ jobs:
           path: .omero
           ref: ${{ secrets.OMERO_TEST_INFRA_REF }}
 
-      - name: Clone repository
-        run: |
-          git clone https://github.com/Qureator/omero-cli-transfer.git
-          cd omero-cli-transfer
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - name: Install dependencies
-        run: |
-          conda run -n omero-transfer pip install -e .
 
       - name: Build and run standard tests
         run: |
