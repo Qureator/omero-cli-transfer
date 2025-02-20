@@ -54,16 +54,19 @@ jobs:
 
       - name: Install dependencies
         run: |
+          conda init
           conda activate omero-transfer
           pip install -e .
 
       - name: Build and run standard tests
         run: |
+          conda init
           conda activate omero-transfer
           POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
 
       - name: Build and run no-plate tests
         run: |
+          conda init
           conda activate omero-transfer
           .omero/docker $STAGE
 
