@@ -30,13 +30,19 @@ jobs:
       STAGE: cli
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SSH
+      
+      - name: Install system dependencies for zeroc-ice
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          sudo apt-get update
+          sudo apt-get install -y \
+            libssl-dev \
+            libbz2-dev \
+            libmcpp-dev \
+            mcpp \
+            build-essential \
+            g++ \
+            python3-dev \
+            python3-pip
 
       - name: Checkout omero-test-infra
         uses: actions/checkout@master
@@ -46,10 +52,11 @@ jobs:
           ref: ${{ secrets.OMERO_TEST_INFRA_REF }}
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt  # zeroc-ice 포함
 
       - name: Build and run standard tests
         run: POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
 
       - name: Build and run no-plate tests
         run: .omero/docker $STAGE
+
