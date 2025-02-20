@@ -30,33 +30,40 @@ jobs:
       STAGE: cli
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install system dependencies for zeroc-ice
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libssl-dev \
-            libbz2-dev \
-            libmcpp-dev \
-            mcpp \
-            build-essential \
-            g++ \
-            python3-dev \
-            python3-pip
 
-      - name: Checkout omero-test-infra
-        uses: actions/checkout@master
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          repository: ome/omero-test-infra
-          path: .omero
-          ref: ${{ secrets.OMERO_TEST_INFRA_REF }}
+          auto-update-conda: true
+          python-version: "3.9"
+          channels: conda-forge
+          activate-environment: omero-transfer
+          environment-file: environment.yml  # (선택) 환경 파일을 사용하면 편리함
+
+      - name: Create and activate Conda environment
+        run: |
+          conda create -n omero-transfer -c conda-forge python=3.9 zeroc-ice==3.6.5
+          echo "conda activate omero-transfer" >> ~/.bashrc
+          source ~/.bashrc
+          conda info --envs
+
+      - name: Clone repository
+        run: |
+          git clone https://github.com/Qureator/omero-cli-transfer.git
+          cd omero-cli-transfer
 
       - name: Install dependencies
-        run: pip install -r requirements.txt  # zeroc-ice 포함
+        run: |
+          conda activate omero-transfer
+          pip install -e .
 
       - name: Build and run standard tests
-        run: POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
+        run: |
+          conda activate omero-transfer
+          POLICY_BINARY_ACCESS=+read,+write,+image,+plate .omero/docker $STAGE
 
       - name: Build and run no-plate tests
-        run: .omero/docker $STAGE
+        run: |
+          conda activate omero-transfer
+          .omero/docker $STAGE
 
