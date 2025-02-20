@@ -38,6 +38,9 @@ jobs:
           python-version: "3.9"
           channels: conda-forge
           activate-environment: omero-transfer
+          repository: ome/omero-test-infra
+          path: .omero
+          ref: ${{ secrets.OMERO_TEST_INFRA_REF }}
 
       - name: Create and activate Conda environment
         run: |
