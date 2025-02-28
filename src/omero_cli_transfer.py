@@ -440,10 +440,6 @@ class TransferControl(GraphControl):
                     for path in el:
                         if path.text in dest_paths:
                             path.text = dest_paths[path.text]
-                        else:
-                            raise ValueError(
-                                f"Path {path.text} not found in path_id_dict"
-                            )
 
         ome = from_xml(ETree.tostring(ome_dict))
         return ome
