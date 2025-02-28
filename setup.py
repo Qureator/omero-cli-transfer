@@ -41,7 +41,7 @@ setup(
         'pydantic==1.10.13',
         'omero-acquisition-transfer @ '
         'git+ssh://git@github.com/Qureator/omero-acquisition-transfer.git'
-        '#egg=omero-acquisition-transfer-1.1.0',
+        '@update-version',
     ],
     extras_require={
         "rocrate": ["rocrate>=0.7.0, <1.0.0"],
