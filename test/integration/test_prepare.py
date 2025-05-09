@@ -15,7 +15,8 @@ from ome_types.model import TagAnnotation, MapAnnotation
 from ome_types.model import AnnotationRef, ROI, ROIRef, Rectangle
 from ome_types.model.screen import PlateRef
 from ome_types.model.map import M, Map
-from generate_xml import populate_xml_folder
+from uuid import uuid4
+
 
 import ezomero
 import pytest
@@ -23,6 +24,10 @@ import os
 
 TEST_FOLDERS = [
         "test/data/prepare/",
+]
+
+TEST_FILELISTS = [
+        "test/data/prepare/filelist.txt"
 ]
 
 
@@ -80,10 +85,8 @@ class TestPrepare(CLITest):
         if Path(folder / 'transfer.xml').exists():
             print('transfer.xml exists! deleting.')
             os.remove(str(folder / 'transfer.xml'))
-        if Path(folder / 'transfer.xml').exists():
-            print('transfer.xml still exists???')
-        _, _ = populate_xml_folder(str(folder),
-                                   self.gw, self.session)
+        args = self.args + ["prepare", str(folder)]
+        self.cli.invoke(args, strict=True)
         assert Path(folder / 'transfer.xml').exists()
         assert os.path.getsize(str(folder / 'transfer.xml')) > 0
         args = self.args + ["unpack", "--folder", str(folder)]
@@ -110,6 +113,23 @@ class TestPrepare(CLITest):
         if Path(folder / 'transfer.xml').exists():
             os.remove(str(folder / 'transfer.xml'))
 
+    @pytest.mark.parametrize('filelist', sorted(TEST_FILELISTS))
+    def test_prepare_filelist(self, filelist):
+        folder = Path(filelist).parent
+        if Path(folder / 'transfer.xml').exists():
+            print('transfer.xml exists! deleting.')
+            os.remove(str(folder / 'transfer.xml'))
+        args = self.args + ["prepare", "--filelist", str(filelist)]
+        self.cli.invoke(args, strict=True)
+        assert Path(folder / 'transfer.xml').exists()
+        assert os.path.getsize(str(folder / 'transfer.xml')) > 0
+        args = self.args + ["unpack", "--folder", str(folder)]
+        self.cli.invoke(args, strict=True)
+        self.run_asserts_filelist()
+        self.delete_all()
+        if Path(folder / 'transfer.xml').exists():
+            os.remove(str(folder / 'transfer.xml'))
+
     def run_asserts_clean(self):
         img_ids = ezomero.get_image_ids(self.gw)
         assert len(img_ids) == 3
@@ -118,6 +138,16 @@ class TestPrepare(CLITest):
             img, _ = ezomero.get_image(self.gw, i, no_pixels=True)
             img_names.append(img.getName())
         assert "vsi-ets-test-jpg2k.vsi [macro image]" in img_names
+
+    def run_asserts_filelist(self):
+        img_ids = ezomero.get_image_ids(self.gw)
+        assert len(img_ids) == 1
+        img_names = []
+        for i in (img_ids):
+            img, _ = ezomero.get_image(self.gw, i, no_pixels=True)
+            img_names.append(img.getName())
+        assert "vsi-ets-test-jpg2k.vsi [macro image]" not in img_names
+        assert "test_pyramid.tiff" in img_names
 
     def run_asserts_edited(self):
         img_ids = ezomero.get_image_ids(self.gw)
@@ -140,8 +170,9 @@ class TestPrepare(CLITest):
             elif img_name == "edited image name":
                 kvs = ezomero.get_map_annotation_ids(self.gw, "Image",
                                                      img.getId())
-                assert len(kvs) == 1
-                kv = ezomero.get_map_annotation(self.gw, kvs[0])
+                kvs = sorted(kvs)
+                assert len(kvs) == 2
+                kv = ezomero.get_map_annotation(self.gw, kvs[-1])
                 assert len(kv) == 2
                 assert kv['key1'] == "value1"
                 assert kv['key2'] == "2"
@@ -151,7 +182,7 @@ class TestPrepare(CLITest):
                 shapes = ezomero.get_shape_ids(self.gw, rois[0])
                 assert len(shapes) == 1
                 shape = ezomero.get_shape(self.gw, shapes[0])
-                assert type(shape) == ezomero.rois.Rectangle
+                assert type(shape) is ezomero.rois.Rectangle
                 assert shape.x == 1
                 assert shape.y == 2
                 assert shape.width == 3
@@ -167,12 +198,17 @@ class TestPrepare(CLITest):
         assert len(pl_ids) == 1
 
     def edit_xml(self, filename):
-        ome = from_xml(filename, parser='xmlschema')
+        ome = from_xml(filename)
+        ann_count = uuid4().int >> 64
         new_proj = Project(id="Project:1", name="edited project")
         new_ds = Dataset(id="Dataset:1", name="edited dataset")
-        newtag1 = TagAnnotation(id="Annotation:1", value="tag for proj")
-        newtag2 = TagAnnotation(id="Annotation:2", value="tag for img")
-        new_proj.annotation_ref.append(AnnotationRef(id=newtag1.id))
+        newtag1 = TagAnnotation(id=f"Annotation:{ann_count}",
+                                value="tag for proj")
+        ann_count += 1
+        newtag2 = TagAnnotation(id=f"Annotation:{ann_count}",
+                                value="tag for img")
+        ann_count += 1
+        new_proj.annotation_refs.append(AnnotationRef(id=newtag1.id))
         md_dict = {"key1": "value1", "key2": 2}
         mmap = []
         for _key, _value in md_dict.items():
@@ -180,31 +216,32 @@ class TestPrepare(CLITest):
                 mmap.append(M(k=_key, value=str(_value)))
             else:
                 mmap.append(M(k=_key, value=''))
-        mapann = MapAnnotation(id="Annotation:3", value=Map(m=mmap))
+        mapann = MapAnnotation(id=f"Annotation:{ann_count}",
+                               value=Map(ms=mmap))
         rect = Rectangle(id="Shape:1", x=1, y=2, width=3, height=4)
         roi = ROI(id="ROI:1", union=[rect])
         ome.rois.append(roi)
         ome.structured_annotations.extend([newtag1, newtag2, mapann])
         for img in ome.images:
             if img.name == "test_pyramid.tiff":
-                img.annotation_ref.append(AnnotationRef(id=newtag2.id))
+                img.annotation_refs.append(AnnotationRef(id=newtag2.id))
                 imref = ImageRef(id=img.id)
-                new_ds.image_ref.append(imref)
+                new_ds.image_refs.append(imref)
             elif img.name == "vsi-ets-test-jpg2k.vsi [001 C405, C488]":
                 img.name = "edited image name"
-                img.annotation_ref.append(AnnotationRef(id=mapann.id))
+                img.annotation_refs.append(AnnotationRef(id=mapann.id))
                 imref = ImageRef(id=img.id)
-                new_ds.image_ref.append(imref)
+                new_ds.image_refs.append(imref)
             elif img.name == "vsi-ets-test-jpg2k.vsi [macro image]":
-                img.roi_ref.append(ROIRef(id=roi.id))
+                img.roi_refs.append(ROIRef(id=roi.id))
                 imref = ImageRef(id=img.id)
-                new_ds.image_ref.append(imref)
+                new_ds.image_refs.append(imref)
         dsref = DatasetRef(id=new_ds.id)
-        new_proj.dataset_ref.append(dsref)
+        new_proj.dataset_refs.append(dsref)
         ome.projects.append(new_proj)
         ome.datasets.append(new_ds)
         new_scr = Screen(id="Screen:1", name="edited screen")
-        new_scr.plate_ref.append(PlateRef(id=ome.plates[0].id))
+        new_scr.plate_refs.append(PlateRef(id=ome.plates[0].id))
         ome.screens.append(new_scr)
         with open(filename, 'w') as fp:
             print(to_xml(ome), file=fp)
